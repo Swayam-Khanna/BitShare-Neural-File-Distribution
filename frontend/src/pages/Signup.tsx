@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -29,6 +30,26 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse: any) => {
+      try {
+        setLoading(true);
+        const { data } = await axios.post('http://localhost:8000/api/auth/google', { 
+            access_token: tokenResponse.access_token 
+        });
+        
+        setUser(data);
+        toast.success('Google Authentication Successful!');
+        navigate('/dashboard');
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Google Auth failed');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => toast.error('Google Auth Failed')
+  });
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-6 bg-[#030712] overflow-hidden">
@@ -122,7 +143,11 @@ const Signup = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-8">
-            <button className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-2xl py-3.5 hover:bg-white/10 transition-all group">
+            <button 
+              type="button"
+              onClick={() => loginWithGoogle()}
+              className="flex items-center justify-center gap-2 bg-white/5 border border-white/10 rounded-2xl py-3.5 hover:bg-white/10 transition-all group"
+            >
               <img src="https://www.google.com/favicon.ico" className="w-4 h-4 grayscale group-hover:grayscale-0 transition-all" alt="Google" />
               <span className="text-xs font-bold">Google</span>
             </button>

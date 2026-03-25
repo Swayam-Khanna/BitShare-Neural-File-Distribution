@@ -19,7 +19,7 @@ const io = socketIO(server, {
   },
 });
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors({
   origin: true, // Allow all origins for mobile/local network access
   methods: ["GET", "POST", "PUT", "DELETE"],

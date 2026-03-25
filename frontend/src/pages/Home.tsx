@@ -95,13 +95,13 @@ const Home = () => {
           {/* Upload Section */}
           <motion.div 
             variants={itemVariants}
-            className="glass p-12 rounded-[3.5rem] flex flex-col items-center justify-center text-center group hover:bg-white/[0.05] transition-all duration-700 premium-border"
+            className="glass p-8 rounded-[2rem] flex flex-col items-center justify-center text-center group hover:bg-white/[0.05] transition-all duration-700 premium-border"
           >
-            <div className="w-20 h-20 bg-primary-500/10 rounded-[2rem] flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
-              <Upload className="text-primary-400" size={36} />
+            <div className="w-14 h-14 bg-primary-500/10 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner">
+              <Upload className="text-primary-400" size={24} />
             </div>
-            <h2 className="text-3xl font-black mb-4 italic tracking-tight uppercase">Upload Segment</h2>
-            <p className="text-gray-500 mb-10 max-w-xs font-bold text-xs uppercase tracking-widest">Initiate secure uplink for your local files.</p>
+            <h2 className="text-xl font-black mb-2 italic tracking-tight uppercase">Upload Segment</h2>
+            <p className="text-gray-500 mb-6 max-w-xs font-bold text-xs uppercase tracking-widest">Initiate secure uplink for your local files.</p>
             <div className="w-full">
               <FileUpload />
             </div>
@@ -110,37 +110,37 @@ const Home = () => {
           {/* Download Section */}
           <motion.div 
             variants={itemVariants}
-            className="glass p-12 rounded-[3.5rem] flex flex-col justify-center premium-border"
+            className="glass p-8 rounded-[2rem] flex flex-col justify-center premium-border h-full"
           >
-            <div className="space-y-10">
-              <div className="flex items-center gap-5">
-                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center shadow-inner">
-                  <Download className="text-emerald-400" size={28} />
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-500/10 rounded-[1rem] flex items-center justify-center shadow-inner">
+                  <Download className="text-emerald-400" size={20} />
                 </div>
-                <h2 className="text-3xl font-black italic tracking-tight uppercase">Retrieve Data</h2>
+                <h2 className="text-xl font-black italic tracking-tight uppercase">Retrieve Data</h2>
               </div>
               
               <p className="text-gray-500 font-bold text-xs uppercase tracking-widest leading-loose">Enter the 6-digit decryption signature to begin terminal download.</p>
               
-              <form onSubmit={handleDownload} className="space-y-8">
+              <form onSubmit={handleDownload} className="space-y-6">
                 <div className="relative group">
                   <input
                     type="text"
                     placeholder="SIGNAL KEY"
-                    className="w-full bg-black/40 border border-white/5 rounded-[2rem] px-8 py-7 text-center text-5xl font-black tracking-[0.3em] focus:outline-none focus:ring-4 focus:ring-primary-500/20 transition-all uppercase placeholder:opacity-10 italic"
+                    className="w-full bg-black/40 border border-white/5 rounded-[1.5rem] px-6 py-5 text-center text-3xl font-black tracking-[0.3em] focus:outline-none focus:ring-4 focus:ring-primary-500/20 transition-all uppercase placeholder:opacity-10 italic"
                     value={downloadCode}
                     onChange={(e) => setDownloadCode(e.target.value)}
                     maxLength={6}
                   />
-                  <div className="absolute inset-0 rounded-[2rem] bg-primary-500/5 blur-xl -z-10 opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 rounded-[1.5rem] bg-primary-500/5 blur-xl -z-10 opacity-0 group-focus-within:opacity-100 transition-opacity" />
                 </div>
                 
                 <button 
                   type="submit"
                   disabled={downloadCode.length !== 6}
-                  className="w-full bg-white text-black hover:bg-gray-100 disabled:opacity-20 disabled:grayscale font-black py-6 rounded-[2rem] transition-all flex items-center justify-center gap-3 text-xl active:scale-95 shadow-2xl shadow-white/5 uppercase tracking-widest"
+                  className="w-full bg-white text-black hover:bg-gray-100 disabled:opacity-20 disabled:grayscale font-black py-4 rounded-[1.5rem] transition-all flex items-center justify-center gap-3 text-lg active:scale-95 shadow-2xl shadow-white/5 uppercase tracking-widest"
                 >
-                  Decrypt Signal <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
+                  Decrypt Signal <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                 </button>
               </form>
               

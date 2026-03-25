@@ -138,15 +138,15 @@ const FileUpload = ({ onClose }: { onClose?: () => void }) => {
       {!file ? (
         <div 
           {...getRootProps()} 
-          className={`relative overflow-hidden border-2 border-dashed rounded-[3rem] p-16 transition-all duration-700 cursor-pointer flex flex-col items-center justify-center gap-8 group
+          className={`relative overflow-hidden border-2 border-dashed rounded-[2rem] p-8 transition-all duration-700 cursor-pointer flex flex-col items-center justify-center gap-4 group
             ${isDragActive ? 'border-primary-500 bg-primary-500/10 scale-102' : 'border-white/10 hover:border-primary-500/30 hover:bg-white/[0.03]'}`}
         >
           <input {...getInputProps()} />
-          <div className="bg-primary-500/10 p-6 rounded-[2rem] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner border border-primary-500/10">
-            <Upload className="text-primary-400" size={40} />
+          <div className="bg-primary-500/10 p-4 rounded-[1.5rem] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-inner border border-primary-500/10">
+            <Upload className="text-primary-400" size={28} />
           </div>
           <div className="text-center">
-            <p className="text-2xl font-black italic tracking-tight mb-3 uppercase">
+            <p className="text-lg font-black italic tracking-tight mb-1 uppercase">
               {isDragActive ? 'Release to Uplink' : 'Initiate Transfer'}
             </p>
             <p className="text-[10px] text-gray-600 font-black uppercase tracking-[0.4em] opacity-60">Drag and drop file segments here</p>

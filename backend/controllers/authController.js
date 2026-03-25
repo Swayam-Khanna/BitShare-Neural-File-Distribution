@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
+const { OAuth2Client } = require("google-auth-library");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -81,15 +82,34 @@ const authUser = async (req, res) => {
 };
 
 const googleAuth = async (req, res) => {
-    // In a real app, you'd verify the Google token from the client
-    const { name, email, googleId, avatar } = req.body;
+    const { access_token } = req.body;
     
+    if (!access_token) {
+        return res.status(400).json({ message: "No Google access token provided" });
+    }
+
     try {
+        const fetch = (await import('node-fetch')).default || require('node-fetch'); // fallback structure but axios is better since it's in package.json
+        // Wait, we have axios in backend/package.json! 
+        const axios = require('axios');
+        
+        // Fetch user data from Google with the access token
+        const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` }
+        });
+        
+        const payload = googleResponse.data;
+        const { sub: googleId, email, name, picture: avatar } = payload;
+
         let user = await User.findOne({ email });
         
         if (user) {
-            user.googleId = googleId;
-            user.avatar = avatar;
+            if (!user.googleId) {
+                user.googleId = googleId;
+            }
+            if (!user.avatar && avatar) {
+                user.avatar = avatar;
+            }
             await user.save();
         } else {
             user = await User.create({
@@ -100,17 +120,28 @@ const googleAuth = async (req, res) => {
             });
         }
         
+        // Check if 2FA is enabled (same logic as normal login)
+        if (user.isTwoFactorEnabled) {
+            return res.json({
+                requires2FA: true,
+                userId: user._id,
+                message: "2FA Verification Required"
+            });
+        }
+        
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
+            avatar: user.avatar,
             tier: user.tier,
             usedStorage: user.usedStorage,
             storageLimit: user.storageLimit,
             token: generateToken(user._id),
         });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error("Google Auth Error:", error);
+        res.status(500).json({ message: "Authentication failed. Invalid Google token." });
     }
 };
 

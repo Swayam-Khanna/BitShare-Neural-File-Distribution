@@ -165,7 +165,7 @@ const ProfileForm = ({ user, onClose }: any) => {
         if (path.startsWith('http')) return path;
         const base = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:8000';
         const cleanB = base.endsWith('/') ? base.slice(0, -1) : base;
-        let cleanP = path.startsWith('/public/') ? path.replace('/public/', '/') : path;
+        let cleanP = path;
         if (!cleanP.startsWith('/')) cleanP = `/${cleanP}`;
         return `${cleanB}${cleanP}`;
     };
@@ -331,7 +331,7 @@ const DashboardContent = () => {
     if (path.startsWith('http')) return path;
     const base = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:8000';
     const cleanB = base.endsWith('/') ? base.slice(0, -1) : base;
-    let cleanP = path.startsWith('/public/') ? path.replace('/public/', '/') : path;
+    let cleanP = path;
     if (!cleanP.startsWith('/')) cleanP = `/${cleanP}`;
     return `${cleanB}${cleanP}`;
   };
