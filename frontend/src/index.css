@@ -75,5 +75,20 @@ body {
 @layer base {
   body {
     @apply text-gray-100 antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Extremely smooth, natural flow overriding default snappy tailwind transitions */
+  [class*="transition"] {
+    transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1) !important;
+    transition-duration: 600ms !important;
+  }
+
+  /* Hardware acceleration to maintain consistent frame flow and avoid jitter */
+  [class*="-translate"], [class*="scale"] {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }

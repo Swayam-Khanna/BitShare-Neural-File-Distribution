@@ -65,9 +65,20 @@ io.on("connection", (socket) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.send("BitShare API is running...");
-});
+if (process.env.NODE_ENV === "production") {
+  const frontendPath = path.join(__dirname, "../frontend/dist");
+  app.use(express.static(frontendPath));
+  
+  app.get("*", (req, res) => {
+    if (!req.originalUrl.startsWith("/api")) {
+      res.sendFile(path.join(frontendPath, "index.html"));
+    }
+  });
+} else {
+  app.get("/", (req, res) => {
+    res.send("BitShare API is running...");
+  });
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
