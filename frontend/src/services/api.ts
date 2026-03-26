@@ -1,18 +1,12 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
-// Detect the current hostname (e.g., 192.168.1.5 or localhost)
-const hostname = window.location.hostname;
-const isProd = import.meta.env.PROD;
-let API_URL = import.meta.env.VITE_API_URL || (isProd ? '/api' : `http://${hostname}:8000/api`);
-
-// Always ensure it ends with a slash for relative pathing
-if (!API_URL.endsWith('/')) {
-    API_URL += '/';
-}
+// Detect the current hostname for local testing (e.g., 192.168.1.5 or localhost)
+const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const API_URL = import.meta.env.VITE_API_URL || `http://${hostname}:8000/api`;
 
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: API_URL.endsWith('/') ? API_URL : `${API_URL}/`,
 });
 
 console.log("Axios Base URL:", API_URL);

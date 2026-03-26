@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Share2, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { GoogleLogin } from '@react-oauth/google';
@@ -20,7 +20,7 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:8000/api/auth/register', { name, email, password });
+      const { data } = await api.post('/auth/register', { name, email, password });
       setUser(data);
       toast.success('Account created successfully!');
       navigate('/dashboard');
@@ -34,7 +34,7 @@ const Signup = () => {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setLoading(true);
-      const { data } = await axios.post('http://localhost:8000/api/auth/google', { 
+      const { data } = await api.post('/auth/google', { 
           credential: credentialResponse.credential 
       });
       

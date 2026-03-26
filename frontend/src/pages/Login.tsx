@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Share2, ShieldCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { GoogleLogin } from '@react-oauth/google';
@@ -23,7 +23,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:8000/api/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password });
       
       if (data.requires2FA) {
         setTempUserId(data.userId);
@@ -47,7 +47,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:8000/api/auth/verify-2fa', { 
+      const { data } = await api.post('/auth/verify-2fa', { 
         userId: tempUserId, 
         token: twoFactorToken 
       });
@@ -64,7 +64,7 @@ const Login = () => {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setLoading(true);
-      const { data } = await axios.post('http://localhost:8000/api/auth/google', { 
+      const { data } = await api.post('/auth/google', { 
           credential: credentialResponse.credential 
       });
       

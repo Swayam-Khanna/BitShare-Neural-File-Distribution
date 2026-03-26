@@ -163,11 +163,12 @@ const ProfileForm = ({ user, onClose }: any) => {
     const getAvatarUrl = (path: string | undefined | null) => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        const base = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:8000';
+        const base = api.defaults.baseURL || '';
         const cleanB = base.endsWith('/') ? base.slice(0, -1) : base;
+        const baseUrlWithoutApi = cleanB.replace('/api', '');
         let cleanP = path;
         if (!cleanP.startsWith('/')) cleanP = `/${cleanP}`;
-        return `${cleanB}${cleanP}`;
+        return `${baseUrlWithoutApi}${cleanP}`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -329,11 +330,12 @@ const DashboardContent = () => {
   const getAvatarUrl = (path: string | undefined | null) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    const base = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:8000';
+    const base = api.defaults.baseURL || '';
     const cleanB = base.endsWith('/') ? base.slice(0, -1) : base;
+    const baseUrlWithoutApi = cleanB.replace('/api', '');
     let cleanP = path;
     if (!cleanP.startsWith('/')) cleanP = `/${cleanP}`;
-    return `${cleanB}${cleanP}`;
+    return `${baseUrlWithoutApi}${cleanP}`;
   };
 
   if (!user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white"><div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>;

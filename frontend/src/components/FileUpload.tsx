@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, File as FileIcon, CheckCircle, Copy, LayoutDashboard, ArrowRight, Shield, Lock, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { useFileStore } from '../store/useFileStore';
@@ -42,14 +42,8 @@ const FileUpload = ({ onClose }: { onClose?: () => void }) => {
       formData.append('expiresAt', expiryDate.toISOString());
     }
 
-    const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-
     try {
-      const { data } = await axios.post(`${API_HOST}/files/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: user ? `Bearer ${user.token}` : undefined
-        },
+      const { data } = await api.post('/files/upload', formData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 100));
           setProgress(percentCompleted);

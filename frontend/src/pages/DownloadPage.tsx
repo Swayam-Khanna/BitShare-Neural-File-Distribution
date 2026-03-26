@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Download, File as FileIcon, Clock, Shield, Lock, AlertCircle, Share2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const DownloadPage = () => {
@@ -15,10 +15,8 @@ const DownloadPage = () => {
 
   useEffect(() => {
     const fetchFileInfo = async () => {
-      const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-      
       try {
-        const { data } = await axios.get(`${API_HOST}/files/info/${code}`);
+        const { data } = await api.get(`/files/info/${code}`);
         setFile(data);
       } catch (error: any) {
         toast.error('Sector offline or link terminated');
@@ -33,11 +31,9 @@ const DownloadPage = () => {
   const handleDownload = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
-    const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-    
     try {
-      const response = await axios({
-        url: `${API_HOST}/files/download/${code}`,
+      const response = await api({
+        url: `/files/download/${code}`,
         method: 'GET',
         params: { password },
         responseType: 'blob',
