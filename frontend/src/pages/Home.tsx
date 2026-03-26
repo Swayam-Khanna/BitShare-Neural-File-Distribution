@@ -36,18 +36,18 @@ const Home = () => {
       <Scene3D />
       
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass border-b-0 m-6 rounded-3xl max-w-7xl mx-auto flex justify-between items-center px-10 py-5 transition-all hover:bg-white/[0.05]">
-        <div className="text-2xl font-black flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-          <div className="p-2.5 bg-primary-600 rounded-xl shadow-xl shadow-primary-500/30 group-hover:scale-110 transition-transform">
-            <Share2 className="text-white" size={22} />
+      <nav className="fixed top-0 left-0 right-0 z-50 glass border-b-0 m-3 sm:m-6 rounded-3xl max-w-7xl mx-auto flex justify-between items-center px-4 sm:px-10 py-3 sm:py-5 transition-all hover:bg-white/[0.05]">
+        <div className="text-xl sm:text-2xl font-black flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+          <div className="p-2 sm:p-2.5 bg-primary-600 rounded-xl shadow-xl shadow-primary-500/30 group-hover:scale-110 transition-transform">
+            <Share2 className="text-white" size={20} />
           </div>
           <span className="tracking-tight italic font-black">BitShare</span>
         </div>
-        <div className="flex items-center gap-8">
-          <button onClick={() => navigate('/login')} className="text-sm font-bold text-gray-400 hover:text-white transition uppercase tracking-widest">Login</button>
+        <div className="flex items-center gap-3 sm:gap-8">
+          <button onClick={() => navigate('/login')} className="text-[10px] sm:text-sm font-bold text-gray-400 hover:text-white transition uppercase tracking-widest leading-none">Login</button>
           <button 
             onClick={() => navigate('/signup')} 
-            className="bg-white text-black hover:bg-gray-100 px-7 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-white/5 active:scale-95"
+            className="bg-white text-black hover:bg-gray-100 px-4 sm:px-7 py-2 sm:py-3 rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-white/5 active:scale-95 leading-none"
           >
             Get Started
           </button>

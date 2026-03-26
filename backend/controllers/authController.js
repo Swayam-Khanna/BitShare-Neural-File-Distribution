@@ -82,24 +82,34 @@ const authUser = async (req, res) => {
 };
 
 const googleAuth = async (req, res) => {
-    const { access_token } = req.body;
+    const { access_token, credential } = req.body;
     
-    if (!access_token) {
-        return res.status(400).json({ message: "No Google access token provided" });
+    if (!access_token && !credential) {
+        return res.status(400).json({ message: "No Google token provided" });
     }
 
     try {
-        const fetch = (await import('node-fetch')).default || require('node-fetch'); // fallback structure but axios is better since it's in package.json
-        // Wait, we have axios in backend/package.json! 
-        const axios = require('axios');
+        let payload;
         
-        // Fetch user data from Google with the access token
-        const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${access_token}` }
-        });
+        if (credential) {
+            // If we have an ID Token (from standard GoogleLogin component)
+            const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+            const ticket = await client.verifyIdToken({
+                idToken: credential,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+            payload = ticket.getPayload();
+        } else {
+            // If we have an access_token (from custom useGoogleLogin hook)
+            const axios = require('axios');
+            const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${access_token}` }
+            });
+            payload = googleResponse.data;
+        }
         
-        const payload = googleResponse.data;
         const { sub: googleId, email, name, picture: avatar } = payload;
+        // ... rest of the logic remains same
 
         let user = await User.findOne({ email });
         
