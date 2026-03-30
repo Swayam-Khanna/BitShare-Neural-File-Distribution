@@ -14,8 +14,6 @@ const api = axios.create({
   baseURL: API_URL,
 });
 
-console.log("Axios Base URL:", API_URL);
-
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().user?.token;
   if (token) {

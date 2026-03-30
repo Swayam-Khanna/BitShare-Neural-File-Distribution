@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, File as FileIcon, CheckCircle, Copy, LayoutDashboard, ArrowRight, Shield, Lock, Clock } from 'lucide-react';
+import { Upload, X, File as FileIcon, CheckCircle, Copy, LayoutDashboard, ArrowRight, Shield, Clock } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../../store/useAuthStore';

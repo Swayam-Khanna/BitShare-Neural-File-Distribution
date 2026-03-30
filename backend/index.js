@@ -1,28 +1,18 @@
 const express = require("express");
-const http = require("http");
-const socketIO = require("socket.io");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const connectDB = require("./config/db");
 const path = require("path");
+const pusher = require("./config/pusher");
 
 dotenv.config();
 connectDB();
 
 const app = express();
-const server = http.createServer(app);
 
 // Production-ready CORS with environment-based origin filtering
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true;
-
-const io = socketIO(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-  },
-});
 
 app.use(helmet({ 
   crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -45,9 +35,9 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname, "public")));
 
-// Socket.io injection
+// Pusher injection (replaces Socket.io injection)
 app.use((req, res, next) => {
-  req.io = io;
+  req.pusher = pusher;
   next();
 });
 
@@ -61,25 +51,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
 
-
-io.on("connection", (socket) => {
-  if (process.env.NODE_ENV !== "production") {
-    console.log("A user connected:", socket.id);
-  }
-
-  socket.on("join", (userId) => {
-    socket.join(userId);
-    if (process.env.NODE_ENV !== "production") {
-        console.log(`User ${userId} joined their notification room`);
-    }
-  });
-
-  socket.on("disconnect", () => {
-    if (process.env.NODE_ENV !== "production") {
-        console.log("User disconnected");
-    }
-  });
-});
 
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "../frontend/dist");
@@ -106,6 +77,8 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8000;
-server.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
+
+module.exports = app;

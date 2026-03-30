@@ -93,9 +93,9 @@ const uploadFile = async (req, res) => {
         file: file._id
     });
 
-    if (req.io) {
-      req.io.emit("fileUploaded", file);
-      req.io.emit("activityFeedUpdate", activity);
+    if (req.pusher) {
+      req.pusher.trigger("global", "fileUploaded", file);
+      req.pusher.trigger("global", "activityFeedUpdate", activity);
     }
 
     res.status(201).json(file);
@@ -185,12 +185,12 @@ const downloadFile = async (req, res) => {
         file: file._id
     });
 
-    if (req.io && file.user) {
-        req.io.to(file.user.toString()).emit("notification", {
+    if (req.pusher && file.user) {
+        req.pusher.trigger(`user-${file.user.toString()}`, "notification", {
             message: `Someone downloaded your file: ${file.originalName}`,
             geo: geo.city
         });
-        req.io.emit("activityFeedUpdate", activity);
+        req.pusher.trigger("global", "activityFeedUpdate", activity);
     }
 
     res.download(file.path, file.originalName);

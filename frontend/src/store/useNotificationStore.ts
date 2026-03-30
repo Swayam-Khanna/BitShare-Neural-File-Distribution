@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { io, Socket } from 'socket.io-client';
+import Pusher from 'pusher-js';
 import toast from 'react-hot-toast';
 
 interface Notification {
@@ -13,8 +13,8 @@ interface Notification {
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
-  socket: Socket | null;
-  initSocket: (userId?: string) => void;
+  pusher: Pusher | null;
+  initPusher: (userId?: string) => void;
   addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
   markAsRead: (id: string) => void;
   clearNotifications: () => void;
@@ -23,37 +23,39 @@ interface NotificationState {
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
-  socket: null,
+  pusher: null,
 
-  initSocket: (userId) => {
-    if (get().socket) return;
+  initPusher: (userId) => {
+    if (get().pusher) return;
 
-    const hostname = window.location.hostname;
-    const SOCKET_URL = import.meta.env.VITE_API_URL 
-      ? import.meta.env.VITE_API_URL.replace('/api', '') 
-      : `http://${hostname}:8000`;
+    const pusherKey = import.meta.env.VITE_PUSHER_KEY;
+    const pusherCluster = import.meta.env.VITE_PUSHER_CLUSTER;
 
-    const socket = io(SOCKET_URL);
+    if (!pusherKey || !pusherCluster) {
+      console.warn('Pusher keys missing. Neural real-time sync disabled.');
+      return;
+    }
 
-    socket.on('connect', () => {
-      console.log('Socket connected');
-      if (userId) {
-        socket.emit('join', userId);
-      }
+    const pusher = new Pusher(pusherKey, {
+      cluster: pusherCluster,
     });
 
-    socket.on('notification', (data: { message: string }) => {
-      get().addNotification({
-        message: data.message,
-        type: 'DOWNLOAD',
+    if (userId) {
+      const channel = pusher.subscribe(`user-${userId}`);
+      
+      channel.bind('notification', (data: { message: string }) => {
+        get().addNotification({
+          message: data.message,
+          type: 'DOWNLOAD',
+        });
+        toast.success(data.message, {
+          icon: '🔔',
+          duration: 5000,
+        });
       });
-      toast.success(data.message, {
-        icon: '🔔',
-        duration: 5000,
-      });
-    });
+    }
 
-    set({ socket });
+    set({ pusher });
   },
 
   addNotification: (notification) => {

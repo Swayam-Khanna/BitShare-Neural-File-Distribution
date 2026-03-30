@@ -49,7 +49,7 @@ const Dashboard = () => {
   const trash = useFileStore(state => state.trash);
   const loading = useFileStore(state => state.loading);
   const { fetchFiles, fetchTrash, deleteFile, restoreFile, permanentDeleteFile } = useFileStore();
-  const { initSocket, socket, unreadCount, notifications, markAsRead, clearNotifications } = useNotificationStore();
+  const { initPusher, pusher, unreadCount, notifications, markAsRead, clearNotifications } = useNotificationStore();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activities, setActivities] = useState<any[]>([]);
@@ -71,7 +71,7 @@ const Dashboard = () => {
   };
 
   useEffect(() => { 
-    fetchFiles(); fetchTrash(); fetchActivities(); if (user?._id) initSocket(user._id); 
+    fetchFiles(); fetchTrash(); fetchActivities(); if (user?._id) initPusher(user._id); 
     
     const params = new URLSearchParams(window.location.search);
     if (params.get('payment') === 'success') {
@@ -82,12 +82,18 @@ const Dashboard = () => {
   }, [user?._id, currentView]);
 
   useEffect(() => {
-    if (socket) {
+    if (pusher) {
+      const channel = pusher.subscribe('global');
       const h = (a: any) => setActivities(p => [a, ...p].slice(0, 10));
-      socket.on('activityFeedUpdate', h);
-      return () => { socket.off('activityFeedUpdate', h); };
+      
+      channel.bind('activityFeedUpdate', h);
+      
+      return () => { 
+        channel.unbind('activityFeedUpdate', h);
+        pusher.unsubscribe('global');
+      };
     }
-  }, [socket]);
+  }, [pusher]);
 
   useEffect(() => {
     // Logic for periodic stats update if needed
