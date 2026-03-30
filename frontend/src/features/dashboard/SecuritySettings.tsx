@@ -4,8 +4,8 @@ import {
     Plus, Zap, Lock, Trash2, Copy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuthStore } from '../store/useAuthStore';
-import api from '../services/api';
+import { useAuthStore } from '../../store/useAuthStore';
+import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const SecuritySettings = () => {

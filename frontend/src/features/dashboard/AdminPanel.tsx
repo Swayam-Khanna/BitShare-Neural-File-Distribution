@@ -3,7 +3,7 @@ import {
     Users, Shield, Zap, Database, Search
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import api from '../services/api';
+import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const AdminPanel = () => {

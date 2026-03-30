@@ -1,26 +1,68 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Share2, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, ArrowRight, User, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { GoogleLogin } from '@react-oauth/google';
+import AuthLayout from '../components/ui/AuthLayout';
 
 const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Validation errors
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+
   const navigate = useNavigate();
   const { setUser } = useAuthStore();
 
+  // ── Handlers ──────────────────────────────────────────────
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val && !/^[A-Za-z\s]*$/.test(val)) {
+      setNameError('Only alphabets are allowed');
+      setName(val.replace(/[^A-Za-z\s]/g, ''));
+    } else {
+      setNameError('');
+      setName(val);
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setEmail(val);
+    if (!val) {
+      setEmailError('');
+    } else if (val[0] && val[0] !== val[0].toLowerCase()) {
+      setEmailError('Email should start with a lowercase letter');
+    } else if (val.length > 3 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      setEmailError('Enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (nameError || emailError) return;
+    if (!/^[A-Za-z\s]+$/.test(name)) {
+      setNameError('Only alphabets are allowed');
+      return;
+    }
+    if (email && email[0] !== email[0].toLowerCase()) {
+      setEmailError('Email should start with a lowercase letter');
+      return;
+    }
 
+    setLoading(true);
     try {
-      const { data } = await api.post('/auth/register', { name, email, password });
+      const { data } = await api.post('auth/register', { name, email, password });
       setUser(data);
       toast.success('Account created successfully!');
       navigate('/dashboard');
@@ -34,10 +76,9 @@ const Signup = () => {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setLoading(true);
-      const { data } = await api.post('/auth/google', { 
-          credential: credentialResponse.credential 
+      const { data } = await api.post('auth/google', {
+        credential: credentialResponse.credential,
       });
-      
       setUser(data);
       toast.success('Google Authentication Successful!');
       navigate('/dashboard');
@@ -48,114 +89,141 @@ const Signup = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 bg-[#030712] overflow-y-auto py-12">
-      {/* Background Blobs */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-600/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full relative z-10"
-      >
-        <div 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-3 text-2xl font-bold mb-6 sm:mb-10 justify-center cursor-pointer group"
+  // ── Animated error badge ───────────────────────────────────
+  const ErrorBadge = ({ msg }: { msg: string }) => (
+    <AnimatePresence>
+      {msg && (
+        <motion.p
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          className="ml-1 mt-1.5 text-[10px] font-black uppercase tracking-widest text-red-400"
         >
-          <div className="p-2 bg-primary-600 rounded-lg group-hover:scale-110 transition-transform shadow-lg shadow-primary-500/20">
-            <Share2 className="text-white" size={20} />
-          </div>
-          <span className="tracking-tight italic font-black text-white">BitShare</span>
-        </div>
+          ⚠ {msg}
+        </motion.p>
+      )}
+    </AnimatePresence>
+  );
 
-        <div className="glass p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] shadow-2xl backdrop-blur-xl border-white/5">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-black mb-3 tracking-tighter italic text-white uppercase">Create Account</h1>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Join the future of secure file sharing.</p>
-          </div>
-
-          <form onSubmit={handleSignup} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-primary-400 transition-colors" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="John Doe"
-                  required
-                  className="w-full bg-black/40 border border-white/5 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-bold text-white placeholder:text-gray-700"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Email Address</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-primary-400 transition-colors" size={18} />
-                <input 
-                  type="email" 
-                  placeholder="name@company.com"
-                  required
-                  className="w-full bg-black/40 border border-white/5 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-bold text-white placeholder:text-gray-700"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Password</label>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-primary-400 transition-colors" size={18} />
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
-                  required
-                  className="w-full bg-black/40 border border-white/5 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-bold text-white placeholder:text-gray-700"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-white text-black hover:bg-gray-100 font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] shadow-lg shadow-white/5 text-xs uppercase tracking-widest"
-            >
-              {loading ? 'CREATING...' : 'GET STARTED'} <ArrowRight size={18} />
-            </button>
-          </form>
-
-          <div className="mt-10 relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/5"></span>
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-black">
-              <span className="bg-[#030712] px-4 text-gray-500 leading-none">Or sign up with</span>
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-8">
-            <GoogleLogin 
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error('Google Auth Failed')}
-              theme="filled_black"
-              shape="pill"
-              text="signup_with"
-              width="300"
+  return (
+    <AuthLayout title="INITIALIZE">
+      <form onSubmit={handleSignup} className="space-y-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="space-y-1"
+        >
+          <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">Name</label>
+          <div className="relative group">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 group-focus-within:text-primary-400 transition-colors z-10" size={16} />
+            <input
+              type="text"
+              placeholder="NAME"
+              required
+              className={`relative w-full bg-white/[0.02] border rounded-lg px-12 py-3 focus:outline-none focus:ring-1 transition-all font-black text-white placeholder:text-gray-800 uppercase tracking-widest text-[9px] z-10 ${nameError ? 'border-red-500/20' : 'border-white/5 focus:ring-primary-500/30'}`}
+              value={name}
+              onChange={handleNameChange}
             />
           </div>
-        </div>
+          <ErrorBadge msg={nameError} />
+        </motion.div>
 
-        <p className="mt-8 text-center text-gray-500 text-[10px] font-black uppercase tracking-widest">
-          Already have an account? <Link to="/login" className="text-primary-400 hover:text-primary-300 transition">Sign In</Link>
-        </p>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-1"
+        >
+          <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">Email</label>
+          <div className="relative group">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 group-focus-within:text-primary-400 transition-colors z-10" size={16} />
+            <input
+              type="email"
+              placeholder="EMAIL"
+              required
+              className={`relative w-full bg-white/[0.02] border rounded-lg px-12 py-3 focus:outline-none focus:ring-1 transition-all font-black text-white placeholder:text-gray-800 uppercase tracking-widest text-[9px] z-10 ${emailError ? 'border-red-500/20' : 'border-white/5 focus:ring-primary-500/30'}`}
+              value={email}
+              onChange={handleEmailChange}
+            />
+          </div>
+          <ErrorBadge msg={emailError} />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-1"
+        >
+          <label className="text-[8px] font-black text-gray-400 uppercase tracking-widest ml-1">Password</label>
+          <div className="relative group">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 group-focus-within:text-primary-400 transition-colors z-10" size={16} />
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              required
+              className="relative w-full bg-white/[0.02] border border-white/5 rounded-lg px-12 py-3 focus:outline-none focus:ring-1 focus:ring-primary-500/30 transition-all font-black text-white placeholder:text-gray-800 z-10 text-[9px] tracking-[0.4em]"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-700 hover:text-primary-400 transition-colors p-1.5 z-20 active:scale-90"
+            >
+              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+            </button>
+          </div>
+        </motion.div>
+
+        <motion.button
+          type="submit"
+          disabled={loading || !!nameError || !!emailError}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full bg-white text-black font-black py-3 rounded-lg flex items-center justify-center gap-2 mt-5 disabled:opacity-50 text-[9px] uppercase tracking-[0.2em] shadow-lg hover:bg-primary-50 transition-all group italic"
+        >
+          {loading ? 'SYNC...' : 'INITIALIZE'}
+          <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+        </motion.button>
+      </form>
+
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="mt-6 border-t border-white/5 pt-6"
+      />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex justify-center mt-6 active:scale-105 transition-transform"
+      >
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => toast.error('Auth Failed')}
+          theme="filled_black"
+          shape="pill"
+          text="signup_with"
+          width="100%"
+        />
       </motion.div>
-    </div>
+
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="mt-8 text-center text-gray-600 text-[9px] font-black uppercase tracking-[0.3em] italic"
+      >
+        Active Node?{' '}
+        <Link to="/login" className="text-primary-400 hover:text-white transition-colors underline decoration-primary-500/20 underline-offset-4">Authenticate</Link>
+      </motion.p>
+    </AuthLayout>
   );
 };
 

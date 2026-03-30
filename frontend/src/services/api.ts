@@ -3,10 +3,15 @@ import { useAuthStore } from '../store/useAuthStore';
 
 // Detect the current hostname for local testing (e.g., 192.168.1.5 or localhost)
 const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-const API_URL = import.meta.env.VITE_API_URL || `http://${hostname}:8000/api`;
+const rawApiUrl = import.meta.env.VITE_API_URL || `http://${hostname}:8000/api`;
+
+// IMPORTANT: baseURL must NOT end with a trailing slash, and all request paths
+// must NOT start with a leading slash. Otherwise Axios resolves from the origin
+// root and the /api prefix is dropped, causing 404 errors on all auth routes.
+const API_URL = rawApiUrl.replace(/\/$/, '');
 
 const api = axios.create({
-  baseURL: API_URL.endsWith('/') ? API_URL : `${API_URL}/`,
+  baseURL: API_URL,
 });
 
 console.log("Axios Base URL:", API_URL);

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Share2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/useAuthStore';
 import { GoogleLogin } from '@react-oauth/google';
+import AuthLayout from '../components/ui/AuthLayout';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -23,7 +24,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await api.post('/auth/login', { email, password });
+      const { data } = await api.post('auth/login', { email, password });
       
       if (data.requires2FA) {
         setTempUserId(data.userId);
@@ -47,7 +48,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await api.post('/auth/verify-2fa', { 
+      const { data } = await api.post('auth/verify-2fa', { 
         userId: tempUserId, 
         token: twoFactorToken 
       });
@@ -64,7 +65,7 @@ const Login = () => {
   const handleGoogleSuccess = async (credentialResponse: any) => {
     try {
       setLoading(true);
-      const { data } = await api.post('/auth/google', { 
+      const { data } = await api.post('auth/google', { 
           credential: credentialResponse.credential 
       });
       
@@ -85,157 +86,133 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 bg-[#030712] overflow-y-auto py-12">
-      {/* Background Blobs */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-600/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+    <AuthLayout title="AUTHENTICATE">
+      <form onSubmit={handleLogin} className="space-y-6">
+        <div className="space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="space-y-1"
+          >
+            <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest ml-1">Email</label>
+            <div className="relative group">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 group-focus-within:text-primary-400 transition-colors" size={16} />
+              <input 
+                type="email" 
+                placeholder="EMAIL"
+                required
+                className="w-full bg-white/[0.02] border border-white/5 rounded-lg px-12 py-3.5 focus:outline-none focus:ring-1 focus:ring-primary-500/30 transition-all font-bold text-white placeholder:text-gray-800 uppercase text-[9px] tracking-widest"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-1"
+          >
+            <div className="flex justify-between items-center ml-1">
+              <label className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Password</label>
+              <a href="#" className="text-[8px] text-primary-400 hover:text-white transition-colors font-black uppercase tracking-widest">Forgot?</a>
+            </div>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-700 group-focus-within:text-primary-400 transition-colors" size={16} />
+              <input 
+                type="password" 
+                placeholder="••••••••"
+                required
+                className="w-full bg-white/[0.02] border border-white/5 rounded-lg px-12 py-3.5 focus:outline-none focus:ring-1 focus:ring-primary-500/30 transition-all font-bold text-white placeholder:text-gray-800 text-[9px] tracking-[0.4em]"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.button 
+          type="submit" 
+          disabled={loading}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full bg-white text-black font-black py-3.5 rounded-lg transition-all flex items-center justify-center gap-2.5 mt-4 disabled:opacity-50 shadow-lg text-[9px] uppercase tracking-[0.2em] hover:bg-primary-50 active:scale-95"
+        >
+          {loading ? 'SYNC...' : 'AUTHENTICATE'} <ArrowRight size={14} />
+        </motion.button>
+      </form>
 
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full relative z-10"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="mt-6 border-t border-white/5 pt-6"
+      />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="flex justify-center mt-8 scale-105"
       >
-        <div 
-          onClick={() => navigate('/')} 
-          className="flex items-center gap-3 text-2xl font-bold mb-6 sm:mb-10 justify-center cursor-pointer group"
-        >
-          <div className="p-2 bg-primary-600 rounded-lg group-hover:scale-110 transition-transform shadow-lg shadow-primary-500/20">
-            <Share2 className="text-white" size={20} />
-          </div>
-          <span className="tracking-tight italic font-black text-white">BitShare</span>
-        </div>
-
-        <div className="glass p-6 sm:p-10 rounded-3xl sm:rounded-[2.5rem] shadow-2xl backdrop-blur-xl border-white/5">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl font-black mb-3 tracking-tighter italic text-white uppercase">Welcome Back</h1>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Securely access your sharing dashboard.</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Identity Mail</label>
-              <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-primary-400 transition-colors" size={18} />
-                <input 
-                  type="email" 
-                  placeholder="name@company.com"
-                  required
-                  className="w-full bg-black/40 border border-white/5 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-bold text-white placeholder:text-gray-700"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center ml-1">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Access Key</label>
-                <a href="#" className="text-[10px] text-primary-400 hover:text-primary-300 transition font-black uppercase tracking-wider">Reset Query?</a>
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-primary-400 transition-colors" size={18} />
-                <input 
-                  type="password" 
-                  placeholder="••••••••"
-                  required
-                  className="w-full bg-black/40 border border-white/5 rounded-2xl px-12 py-4 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-bold text-white placeholder:text-gray-700"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-white text-black hover:bg-gray-100 font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] shadow-lg shadow-white/5 text-xs uppercase tracking-widest"
-            >
-              {loading ? 'SYNCING...' : 'SIGN IN'} <ArrowRight size={18} />
-            </button>
-          </form>
-
-          <div className="mt-10 relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/5"></span>
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-black">
-              <span className="bg-[#030712] px-4 text-gray-500 leading-none">External Nodes</span>
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-8">
-            <GoogleLogin 
-              onSuccess={handleGoogleSuccess}
-              onError={() => toast.error('Google Login Failed')}
-              theme="filled_black"
-              shape="pill"
-              text="continue_with"
-              width="300"
-            />
-          </div>
-        </div>
-
-        <p className="mt-8 text-center text-gray-500 text-[10px] font-black uppercase tracking-widest">
-          Node unregistered? <Link to="/signup" className="text-primary-400 hover:text-primary-300 transition">Establish Connection</Link>
-        </p>
+        <GoogleLogin 
+          onSuccess={handleGoogleSuccess}
+          onError={() => toast.error('Google Login Failed')}
+          theme="filled_black"
+          shape="pill"
+          text="continue_with"
+          width="100%"
+        />
       </motion.div>
+
+      <motion.p 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6 }}
+        className="mt-12 text-center text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]"
+      >
+        Signal unregistered? <Link to="/signup" className="text-primary-400 hover:text-white transition-colors underline decoration-primary-500/30 underline-offset-4">Establish Connection</Link>
+      </motion.p>
 
       {/* 2FA Modal */}
       <AnimatePresence>
         {show2FAModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10">
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-2xl" 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-xl" 
             />
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
               className="w-full max-w-sm glass p-10 rounded-[3rem] border border-white/10 relative z-10 text-center"
             >
               <div className="mb-8">
-                <div className="w-20 h-20 bg-primary-500/10 rounded-3xl flex items-center justify-center text-primary-400 mx-auto mb-6 shadow-lg border border-white/5">
-                  <ShieldCheck size={40} />
-                </div>
+                <div className="w-16 h-16 bg-primary-500/10 rounded-2xl flex items-center justify-center text-primary-400 mx-auto mb-6 shadow-lg border border-white/5"><ShieldCheck size={32} /></div>
                 <h2 className="text-2xl font-black italic tracking-tighter uppercase text-white">Identity Guard</h2>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-2">Enter the verification code from your device</p>
+                <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-2">Neural verification required</p>
               </div>
 
               <form onSubmit={handleVerify2FA} className="space-y-6">
                 <input 
-                  type="text" 
-                  placeholder="000000"
-                  maxLength={6}
-                  required
+                  type="text" placeholder="000000" maxLength={6} required
                   className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-5 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-all font-black text-center text-3xl tracking-[0.5em] text-white"
                   value={twoFactorToken}
                   onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, ''))}
                 />
                 <div className="flex gap-4">
-                    <button 
-                        type="button"
-                        onClick={() => setShow2FAModal(false)}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-gray-500 py-4 rounded-2xl font-black transition-all text-[10px] uppercase tracking-widest"
-                    >
-                        CANCEL
-                    </button>
-                    <button 
-                        type="submit" 
-                        disabled={loading}
-                        className="flex-2 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-primary-600/30 text-[10px] uppercase tracking-widest"
-                    >
-                        {loading ? 'VERIFYING...' : 'CONFIRM IDENTITY'}
-                    </button>
+                    <button type="button" onClick={() => setShow2FAModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-gray-500 py-4 rounded-2xl font-black transition-all text-[9px] uppercase tracking-widest">CANCEL</button>
+                    <button type="submit" disabled={loading} className="flex-2 bg-primary-600 hover:bg-primary-500 text-white px-8 py-4 rounded-2xl font-black transition-all shadow-xl shadow-primary-600/30 text-[9px] uppercase tracking-widest">CONFIRM</button>
                 </div>
               </form>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </AuthLayout>
   );
 };
 

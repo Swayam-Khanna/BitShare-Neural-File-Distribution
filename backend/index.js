@@ -4,7 +4,7 @@ const socketIO = require("socket.io");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
-const connectDB = require("./db");
+const connectDB = require("./config/db");
 const path = require("path");
 
 dotenv.config();
@@ -12,19 +12,29 @@ connectDB();
 
 const app = express();
 const server = http.createServer(app);
+
+// Production-ready CORS with environment-based origin filtering
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true;
+
 const io = socketIO(server, {
   cors: {
-    origin: true,
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
   },
 });
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(helmet({ 
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false // Managed by frontline in prod
+}));
+
 app.use(cors({
-  origin: true, // Allow all origins for mobile/local network access
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
+
 app.use(express.json({
   verify: (req, res, buf) => {
     if (req.originalUrl.startsWith("/api/payments/webhook")) {
@@ -53,15 +63,21 @@ app.use("/api/admin", adminRoutes);
 
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  if (process.env.NODE_ENV !== "production") {
+    console.log("A user connected:", socket.id);
+  }
 
   socket.on("join", (userId) => {
     socket.join(userId);
-    console.log(`User ${userId} joined their notification room`);
+    if (process.env.NODE_ENV !== "production") {
+        console.log(`User ${userId} joined their notification room`);
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    if (process.env.NODE_ENV !== "production") {
+        console.log("User disconnected");
+    }
   });
 });
 
