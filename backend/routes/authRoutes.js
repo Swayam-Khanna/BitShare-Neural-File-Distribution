@@ -13,14 +13,15 @@ const {
 } = require("../controllers/authController");
 const { createApiKey, listApiKeys, deleteApiKey } = require("../controllers/apiKeyController");
 const { protect } = require("../middleware/authMiddleware");
+const { registerValidator, loginValidator, profileUpdateValidator } = require("../middleware/authValidator");
 const upload = require("../utils/multerConfig");
 
-router.post("/register", registerUser);
-router.post("/login", authUser);
+router.post("/register", registerValidator, registerUser);
+router.post("/login", loginValidator, authUser);
 router.post("/verify-2fa", verifyLogin2FA);
 router.post("/google", googleAuth);
 router.get("/profile", protect, getProfile);
-router.put("/profile", protect, upload.single("avatar"), updateProfile);
+router.put("/profile", protect, upload.single("avatar"), profileUpdateValidator, updateProfile);
 
 // 2FA Routes
 router.post("/2fa/setup", protect, setup2FA);

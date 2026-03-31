@@ -6,6 +6,9 @@ const bcrypt = require("bcryptjs");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
+const crypto = require("crypto");
+const cloudinary = require("../config/cloudinary");
+const logger = require("../utils/logger");
 
 const getLocalIp = () => {
   const interfaces = os.networkInterfaces();
@@ -61,10 +64,31 @@ const uploadFile = async (req, res) => {
       hashedPassword = await bcrypt.hash(password, 10);
     }
 
+    // --- Cloudinary Upload Logic ---
+    const uploadToCloudinary = new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: "bitshare/files",
+                resource_type: "auto",
+                public_id: `${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
+                original_filename: req.file.originalname
+            },
+            (error, result) => {
+                if (error) reject(error);
+                else resolve(result);
+            }
+        );
+        stream.end(req.file.buffer);
+    });
+
+    const result = await uploadToCloudinary;
+    const fileUrl = result.secure_url;
+    const publicId = result.public_id;
+
     // --- Neural Content Intelligence (Phase 5) ---
     let summary = "Neural analysis pending...";
     if (req.file.mimetype === 'text/plain') {
-        const content = fs.readFileSync(req.file.path, 'utf8');
+        const content = req.file.buffer.toString('utf8');
         summary = content.slice(0, 150) + (content.length > 150 ? "..." : "");
     } else if (req.file.mimetype === 'application/pdf') {
         summary = "PDF Document Structure Detected. Detailed summary available in Pro Terminal.";
@@ -72,9 +96,9 @@ const uploadFile = async (req, res) => {
 
     const file = await File.create({
       user: req.user ? req.user._id : null,
-      filename: req.file.filename,
+      filename: publicId, // Storing public_id in filename field
       originalName: req.file.originalname,
-      path: req.file.path,
+      path: fileUrl, // Storing Cloudinary URL in path
       size: req.file.size,
       fileType: req.file.mimetype,
       downloadCode,
@@ -83,7 +107,7 @@ const uploadFile = async (req, res) => {
       password: hashedPassword,
       expiresAt: (expiresAt && req.user && req.user.tier !== 'FREE') ? new Date(expiresAt) : null,
       summary,
-      thumbnail: req.file.mimetype.startsWith('image/') ? `/public/uploads/${req.file.filename}` : null
+      thumbnail: req.file.mimetype.startsWith('image/') ? fileUrl : null
     });
 
     const activity = await Activity.create({
@@ -124,6 +148,7 @@ const getTrash = async (req, res) => {
     const files = await File.find(query).sort({ deletedAt: -1 });
     res.status(200).json(files);
   } catch (error) {
+    logger.error("Get Trash Error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -193,7 +218,19 @@ const downloadFile = async (req, res) => {
         req.pusher.trigger("global", "activityFeedUpdate", activity);
     }
 
-    res.download(file.path, file.originalName);
+    // --- Cloudinary Redirect Download ---
+    // We can use the secure_url but we'll add flags to force download
+    const downloadUrl = cloudinary.utils.private_download_url(file.filename, "", {
+        resource_type: file.fileType.startsWith("image/") ? "image" : "raw",
+        attachment: true
+    });
+
+    // Cloudinary private_download_url is for signed downloads, 
+    // but since we stored secure_url, we can just redirect to it with 'fl_attachment'
+    const forcedDownloadUrl = file.path.replace("/upload/", "/upload/fl_attachment/");
+    
+    res.redirect(forcedDownloadUrl);
+    
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -272,15 +309,19 @@ const permanentDeleteFile = async (req, res) => {
             return res.status(401).json({ message: "Not authorized" });
         }
 
-        // Delete from local storage
-        if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
+        // Delete from Cloudinary
+        try {
+            const resourceType = file.fileType.startsWith("image/") ? "image" : "raw";
+            await cloudinary.uploader.destroy(file.filename, { resource_type: resourceType });
+        } catch (storageErr) {
+            logger.error("Cloudinary Delete Error:", storageErr);
         }
 
         await File.findByIdAndDelete(id);
         
-        res.json({ message: "File permanently deleted" });
+        res.json({ message: "File permanently deleted from Cloudinary" });
     } catch (error) {
+        logger.error("Permanent Delete Error:", error);
         res.status(500).json({ message: error.message });
     }
 };

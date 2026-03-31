@@ -4,6 +4,10 @@ const bcrypt = require("bcryptjs");
 const speakeasy = require("speakeasy");
 const qrcode = require("qrcode");
 const { OAuth2Client } = require("google-auth-library");
+const cloudinary = require("../config/cloudinary");
+const crypto = require("crypto");
+const path = require("path");
+const logger = require("../utils/logger");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -150,7 +154,7 @@ const googleAuth = async (req, res) => {
             token: generateToken(user._id),
         });
     } catch (error) {
-        console.error("Google Auth Error:", error);
+        logger.error("Google Auth Error:", error);
         res.status(500).json({ message: "Authentication failed. Invalid Google token." });
     }
 };
@@ -170,8 +174,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
     try {
-        console.log("Update Profile Request Body:", req.body);
-        console.log("Update Profile Request File:", req.file);
+        logger.info(`Profile Update Request for user: ${req.user._id}`);
         
         const user = await User.findById(req.user._id);
 
@@ -196,8 +199,22 @@ const updateProfile = async (req, res) => {
             
             // Handle avatar: if file uploaded, use it. Otherwise, use string if provided.
             if (req.file) {
-                // IMPORTANT: Match the static folder prefix from index.js
-                const avatarUrl = `/public/uploads/${req.file.filename}`;
+                const uploadToCloudinary = new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        {
+                            folder: "bitshare/avatars",
+                            resource_type: "auto",
+                            public_id: `${Date.now()}-${user._id}`,
+                        },
+                        (error, result) => {
+                            if (error) reject(error);
+                            else resolve(result.secure_url);
+                        }
+                    );
+                    stream.end(req.file.buffer);
+                });
+
+                const avatarUrl = await uploadToCloudinary;
                 user.avatar = avatarUrl;
             } else if (req.body.avatar !== undefined && req.body.avatar !== "") {
                 user.avatar = req.body.avatar;
@@ -225,7 +242,7 @@ const updateProfile = async (req, res) => {
             res.status(404).json({ message: "User not found" });
         }
     } catch (error) {
-        console.error("Profile Update Error:", error);
+        logger.error("Profile Update Error:", error);
         res.status(500).json({ message: error.message });
     }
 };
