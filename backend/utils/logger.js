@@ -11,20 +11,23 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
-    // Console output for general logging
+    // Console output for general logging (always used)
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple()
       )
     }),
-    // File transport for error logs
-    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
-    new winston.transports.File({ filename: "logs/combined.log" }),
   ],
 });
 
-// If MongoDB is available, log errors to DB as well for persistent tracking
+// Use file transport ONLY in development (Vercel is read-only)
+if (process.env.NODE_ENV !== "production") {
+    logger.add(new winston.transports.File({ filename: "logs/error.log", level: "error" }));
+    logger.add(new winston.transports.File({ filename: "logs/combined.log" }));
+}
+
+// If MongoDB is available, log errors for persistent tracking (safe for production)
 if (process.env.MONGO_URI) {
     logger.add(new winston.transports.MongoDB({
         db: process.env.MONGO_URI,
