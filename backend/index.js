@@ -37,6 +37,9 @@ connectDB();
 
 const app = express();
 
+// Trust Vercel Proxy for Rate Limiting
+app.set("trust proxy", 1);
+
 // --- Production Middleware ---
 app.use(helmet({ 
   crossOriginResourcePolicy: { policy: "cross-origin" },

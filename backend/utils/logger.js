@@ -32,7 +32,6 @@ if (process.env.NODE_ENV === "development" && !isVercel) {
 if (process.env.MONGO_URI) {
     logger.add(new winston.transports.MongoDB({
         db: process.env.MONGO_URI,
-        options: { useUnifiedTopology: true },
         level: "error",
         collection: "server_logs",
         capped: true,
